@@ -174,3 +174,86 @@ it("test_anonymization_anonymize_tag", () => {
     // then
     expect(SeriesInstanceUIDTag.Value).toEqual([]);
 });
+
+it.only("test_patientname_dataset_save_sampledicom", () => {
+    // given
+    const arrayBuffer = fs.readFileSync("test/sample-dicom.dcm").buffer;
+
+    const dicomData = dcmjs.data.DicomMessage.readFile(arrayBuffer);
+    const dataset = dcmjs.data.DicomMetaDictionary.naturalizeDataset(
+        dicomData.dict
+    );
+    dataset._meta = dcmjs.data.DicomMetaDictionary.namifyDataset(
+        dicomData.meta
+    );
+    console.log("Dataset patient name before edit", dataset.PatientName);
+
+    // when
+    dataset.PatientName = [{ Alphabetic: "Fall 3 Edited" }];
+    
+    //then 
+    expect(JSON.stringify(dataset.PatientName)).toEqual(
+        JSON.stringify([{ Alphabetic: "Fall 3 Edited" }])
+    );
+    console.log("Dataset patient name after edit", dataset.PatientName);
+
+    const segmentationBlob = dcmjs.data.datasetToBlob(dataset);
+    new Promise(resolve => {
+        let segArrayBuffer;
+        var fileReader = new FileReader();
+        fileReader.onload = event => {
+            segArrayBuffer = event.target.result;
+            const dicomData = dcmjs.data.DicomMessage.readFile(segArrayBuffer);
+            const dataset = dcmjs.data.DicomMetaDictionary.naturalizeDataset(
+                dicomData.dict
+            );
+            dataset._meta = dcmjs.data.DicomMetaDictionary.namifyDataset(
+                dicomData.meta
+            );
+            resolve(dataset);
+        };
+        fileReader.readAsArrayBuffer(segmentationBlob);
+    }).then( (editedDataset) => {
+        console.log("Edited dataset patient name", editedDataset.PatientName);
+        expect(JSON.stringify(editedDataset.PatientName)).toEqual(
+            JSON.stringify([{ Alphabetic: "Fall 3 Edited" }])
+        );
+    }).catch((err) => console.log('err', err));
+});
+
+it.only("test_patientname_dataset_save_sampleseg", () => {
+    // given
+    const arrayBuffer = fs.readFileSync("test/sample-seg.dcm").buffer;
+
+    const dicomData = dcmjs.data.DicomMessage.readFile(arrayBuffer);
+    const dataset = dcmjs.data.DicomMetaDictionary.naturalizeDataset(
+        dicomData.dict
+    );
+    dataset._meta = dcmjs.data.DicomMetaDictionary.namifyDataset(
+        dicomData.meta
+    );
+    console.log("Dataset patient name", dataset.PatientName);
+
+    const segmentationBlob = dcmjs.data.datasetToBlob(dataset);
+    new Promise(resolve => {
+        let segArrayBuffer;
+        var fileReader = new FileReader();
+        fileReader.onload = event => {
+            segArrayBuffer = event.target.result;
+            const dicomData = dcmjs.data.DicomMessage.readFile(segArrayBuffer);
+            const dataset = dcmjs.data.DicomMetaDictionary.naturalizeDataset(
+                dicomData.dict
+            );
+            dataset._meta = dcmjs.data.DicomMetaDictionary.namifyDataset(
+                dicomData.meta
+            );
+            resolve(dataset);
+        };
+        fileReader.readAsArrayBuffer(segmentationBlob);
+    }).then( (editedDataset) => {
+        console.log("Edited dataset patient name", editedDataset.PatientName);
+        expect(JSON.stringify(editedDataset.PatientName)).toEqual(
+            JSON.stringify(dataset.PatientName)
+        );
+    }).catch((err) => console.log('err', err));
+});
