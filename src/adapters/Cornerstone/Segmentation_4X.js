@@ -278,9 +278,8 @@ function _createSegFromJSONObjects(jsonObjects, isMultiframe, options) {
             datasets.push(_dataset);
         }
     }
-    console.warn("datasets 0 patient name", datasets[0].PatientName);
+
     var multiframe = Normalizer.normalizeToDataset(datasets);
-    console.warn("multiframe patient name", multiframe.PatientName);
     return new SegmentationDerivation([multiframe], options);
 }
 
